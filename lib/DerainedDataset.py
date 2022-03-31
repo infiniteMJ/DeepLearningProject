@@ -8,7 +8,6 @@ import torchvision
 from torchvision import transforms
 import matplotlib.pyplot as plt
 from PIL import Image
-from skimage import io
 
 class DerainDataset(Dataset):
     def __init__(self, data_root, ground_truth, rainy, transform=None):
@@ -25,19 +24,19 @@ class DerainDataset(Dataset):
         return len(self.rainy_files)
 
     def __getitem__(self, idx):
-        gt_img = io.imread(os.path.join(self.gt_path, str(idx) + '.jpg'))
-        gt_img = cv2.cvtColor(gt_img, cv2.COLOR_BGRA2BGR)
-        gt_img = transforms.functional.to_tensor(gt_img)
+        gt_img = Image.open(os.path.join(self.gt_path, str(idx) + '.jpg')).convert('RGB')
         if self.transform:
             gt_img = self.transform(gt_img)
+        else:
+            gt_img = transforms.functional.to_tensor(gt_img)
 
         rainy_img = []
         for i in range(1, 15):
-            rain_img = io.imread(os.path.join(self.rainy_path, str(idx) + '_' + str(i) + '.jpg'))
-            rain_img = cv2.cvtColor(rain_img, cv2.COLOR_BGRA2BGR)
-            rain_img = transforms.functional.to_tensor(rain_img)
+            rain_img = Image.open(os.path.join(self.rainy_path, str(idx) + '_' + str(i) + '.jpg')).convert('RGB')
             if self.transform:
                 rain_img = self.transform(rain_img)
+            else:
+                rain_img = transforms.functional.to_tensor(rain_img)
             rainy_img.append(rain_img)
 
         sample = {
@@ -45,3 +44,15 @@ class DerainDataset(Dataset):
             'rainy_img': rainy_img
         }
         return sample
+
+
+if __name__ == '__main__':
+    transform = transforms.Compose([
+        transforms.Resize((360, 240)),
+        transforms.ToTensor()
+    ])
+
+    train_dataset = DerainDataset(data_root='drive/MyDrive/DeepLearningProject/data/training',
+                                  ground_truth="ground_truth",
+                                  rainy='rainy_image',
+                                  transform=transform)
