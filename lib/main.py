@@ -20,6 +20,15 @@ from skimage import io
 from math import ceil
 
 if __name__ == '__main__':
+    train_dataset = DerainDataset(data_root='./data/training',
+                              ground_truth="ground_truth",
+                              rainy='rainy_image',
+                              patch_size=64)
+    train_size = int(0.7 * len(train_dataset))
+    val_size = len(train_dataset) - train_size
+    train_dataset, val_dataset = torch.utils.data.random_split(train_dataset, [train_size, val_size])
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, num_workers=0)
+    val_dataloader = DataLoader(val_dataset, batch_size=8, shuffle=True, num_workers=0)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     criterion = nn.MSELoss()
     model_CNN = DerainNet().to(device)
